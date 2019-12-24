@@ -44,8 +44,28 @@ app.listen(8080, function(){
 let loggedUsers = new LoggedUsers();
 
 io.on('connection', function (socket) {
-    console.log('client has connected (socket ID = '+socket.id+')' );
+    console.log('client has connected (socket ID = '+socket.id+ ')');
+	socket.on("user_changed", function(changedUser) {
+		socket.broadcast.emit("user_changed", changedUser);
+	}); 
 
+	socket.on("userUpdated", (email)=>{
+		socket.broadcast.emit("updateData", email);
+	})
+
+
+
+
+
+
+
+
+	socket.on("enviarMensagem", function(msg){
+		console.log(msg);
+		let userInfo = loggedUsers.userInfoBySocketID(socket.id); 
+		console.log(userInfo);
+		socket.broadcast.emit('msg_from_server', "Recebido" + 'msg');
+	})
 
     socket.on('chat',(msg)=>{
     	console.log(msg);
