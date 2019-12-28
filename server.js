@@ -42,56 +42,47 @@ app.listen(8080, function(){
 // Check loggedusers.js file
 
 let loggedUsers = new LoggedUsers();
+var sockets = [];
 
-io.on('connection', function (socket) {
-    console.log('client has connected (socket ID = '+socket.id+ ')');
-	socket.on("user_changed", function(changedUser) {
-		socket.broadcast.emit("user_changed", changedUser);
-	}); 
+io.on('connection', function (socket) {	
+	console.log('client has connected (socket ID = '+socket.id+ ')');
+
+	socket.on("sendSocketEmailToServer", (emailToSetToSocket)=>{
+		console.log(sockets.length);
+		socket.email = emailToSetToSocket;
+		console.log("socket.id = " + socket.id + " socket.email = " + socket.email);
+		sockets.forEach((sockets) =>{
+			console.log("Email: " + sockets.email);
+		});
+		sockets.push(socket);
+		console.log(sockets.length);
+	});
 
 	socket.on("userUpdated", (email)=>{
-		socket.broadcast.emit("updateData", email);
+		console.log("Searching for this email on the list of sockets");
+		sockets.forEach(sockets => {
+			if(email == sockets.email){
+				console.log("Foi encontrado o email: " + email);
+				io.to(`${sockets.id}`).emit("updateData"); //so' para quando o user esta a visualizar os seus movimentos
+				io.to(`${sockets.id}`).emit("notificationFromServer", "You have a new movement on your wallet!"); //sempre que o user estiver na aplicação
+				console.log("Mostrar notificação na aplicação");
+			}else{
+				socket.emit("sendEmail", email);
+				console.log("A enviar email para o user: " + email);
+			}
+		});
 	})
-
-
-
-
-
-
-
-
-	socket.on("enviarMensagem", function(msg){
-		console.log(msg);
-		let userInfo = loggedUsers.userInfoBySocketID(socket.id); 
-		console.log(userInfo);
-		socket.broadcast.emit('msg_from_server', "Recebido" + 'msg');
+	/*
+	socket.on("disconnect", (email)=>{
+		console.log(email);
+		console.log("Tamanho do array antes: " + sockets.lenght);
+		sockets.forEach(socket => {
+			if(email == socket.email){
+				sockets.pull(socket);
+			}
+		});
+		console.log("O user com o email " + email + " saiu da aplicação");
+		console.log("Tamanho do array depois: " + sockets.lenght);
 	})
-
-    socket.on('chat',(msg)=>{
-    	console.log(msg);
-    	socket.broadcast.emit('chat',msg);
-    })
-
-	socket.on('chat-dep',(msg,user)=>{
-		if(user){
-			socket.to(`department_${user.department_id}`).emit('chat',msg);
-		}
-    })
-
-    socket.on('login',(user)=>{
-    	socket.join(`department_${user.department_id}`);
-    	loggedUsers.addUserInfo(user,socket.id)
-    })
-    socket.on('logout',(user)=>{
-    	socket.leave(`department_${user.department_id}`);
-    	loggedUsers.removeUserInfo(user,socket.id)
-    })
-
-    socket.on('pm',(msg,user) =>{
-    	let localUser = loggedUsers.userInfoByID(user.id)
-    	if(localUser){
-    		io.to(localUser.socketID).emit('pm',msg);
-    	}
-    })
-
+	*/
 });
