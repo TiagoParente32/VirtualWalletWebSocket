@@ -78,9 +78,33 @@ io.on('connection', function (socket) {
 			console.log("A enviar email para o user: " + email);
 		}
 		userEstaOnline = 0;
-	})
+	});
 	socket.on("disconnect", ()=>{
-		sockets.splice(socket.id);
-		console.log("Socket removido");
-	})
+		console.log("Antes:");
+		sockets.forEach(socket => {
+            console.log("ID: " + socket.id + " email: " + socket.email);
+        });
+		sockets.splice(sockets.indexOf(socket),1);
+        console.log("Depois:");
+        sockets.forEach(socket => {
+            console.log("ID: " + socket.id + " email: " + socket.email);
+        });
+	});
+
+	socket.on("logout", (socketID)=>{
+		console.log("Antes:");
+		sockets.forEach(socket => {
+            console.log("ID: " + socket.id + " email: " + socket.email);
+        });
+        sockets.forEach(socket => {
+            console.log("ID: " + socket.id + " email: " + socket.email);
+            if(socket.id == socketID){
+                sockets.splice(sockets.indexOf(socket),1);
+            }
+        });
+        console.log("Depois:");
+        sockets.forEach(socket => {
+            console.log("ID: " + socket.id + " email: " + socket.email);
+        });
+    });
 });
